@@ -73,8 +73,10 @@ host's byte-order. The message header has 2 words in it:
 - The first word is the sender's object ID (32-bit).
 
 - The second has 2 parts of 16-bit. The upper 16-bits are the message size in
-  bytes, starting at the header (i.e. it has a minimum value of 8).The lower is
-  the request/event opcode. The size must be a multiple of 4.
+  bytes, starting at the header (i.e. it has a minimum value of 8). The lower is
+  the request/event opcode. The size must be a multiple of 4.The message must
+  be sent with the fewest bytes possible, so padding after the end of a message
+  is not permitted.
 
 The payload describes the request/event arguments. Every argument is always
 aligned to 32-bits. Where padding is required, the value of padding bytes is
