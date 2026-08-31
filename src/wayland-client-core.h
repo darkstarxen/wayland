@@ -242,6 +242,14 @@ wl_display_connect(const char *name);
 struct wl_display *
 wl_display_connect_to_fd(int fd);
 
+/** Connect ignoring `WAYLAND_SOCKET` environmental variable
+ * \relates wl_display
+ */
+#define WL_CONNECT_FLAG_IGNORE_WAYLAND_SOCKET (1 << 0)
+
+struct wl_display *
+wl_display_connect_flags(const char *name, int flags);
+
 void
 wl_display_disconnect(struct wl_display *display);
 
