@@ -1341,6 +1341,8 @@ wl_display_connect_to_fd(int fd)
  * is not thread safe, and since it may race with another thread calling
  * `wl_display_connect`.
  *
+ * `wl_display_connect_flags` may be used to avoid this.
+ *
  * If \c name is a relative path, then the socket is opened relative to
  * the XDG_RUNTIME_DIR directory.
  *
@@ -1359,10 +1361,27 @@ wl_display_connect_to_fd(int fd)
 WL_EXPORT struct wl_display *
 wl_display_connect(const char *name)
 {
-	char *connection, *end;
-	int flags, fd;
+	return wl_display_connect_flags(name, 0);
+}
 
-	connection = getenv("WAYLAND_SOCKET");
+/**
+ * Connect to wayland display, with flags
+ *
+ * `wl_display_connect` with a flags argument.
+ *
+ * The flag WL_CONNECT_FLAG_IGNORE_WAYLAND_SOCKET may be specified to
+ * ignore the WAYLAND_SOCKET environmental variable and connect to the
+ * specified \c name or to WAYLAND_DISPLAY as though it were not set.
+ *
+ */
+WL_EXPORT struct wl_display *
+wl_display_connect_flags(const char *name, int flags)
+{
+	char *connection = NULL, *end;
+	int fd_flags, fd;
+
+	if ((flags & WL_CONNECT_FLAG_IGNORE_WAYLAND_SOCKET) == 0)
+		connection = getenv("WAYLAND_SOCKET");
 	if (connection) {
 		int prev_errno = errno;
 		errno = 0;
@@ -1371,11 +1390,11 @@ wl_display_connect(const char *name)
 			return NULL;
 		errno = prev_errno;
 
-		flags = fcntl(fd, F_GETFD);
-		if (flags == -1 && errno == EBADF)
+		fd_flags = fcntl(fd, F_GETFD);
+		if (fd_flags == -1 && errno == EBADF)
 			return NULL;
-		else if (flags != -1)
-			fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
+		else if (fd_flags != -1)
+			fcntl(fd, F_SETFD, fd_flags | FD_CLOEXEC);
 		unsetenv("WAYLAND_SOCKET");
 	} else {
 		fd = connect_to_socket(name);
