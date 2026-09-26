@@ -297,6 +297,7 @@ shm_pool_create_buffer(struct wl_client *client, struct wl_resource *resource,
 		wl_resource_create(client, &wl_buffer_interface, 1, id);
 	if (buffer->resource == NULL) {
 		wl_client_post_no_memory(client);
+		wl_list_remove(&buffer->client_destroy_listener.link);
 		shm_pool_unref(pool, false);
 		free(buffer);
 		return;
