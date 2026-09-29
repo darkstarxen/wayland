@@ -23,6 +23,10 @@ cc_args = []
 if host_machine.system() not in ['freebsd', 'openbsd']
 	cc_args += ['-D_POSIX_C_SOURCE=200809L']
 endif
+if host_machine.system() == 'darwin'
+	# For CMSG_LEN(), which is an RFC 2292 addition and not part of POSIX.1-2008
+	cc_args += ['-D_DARWIN_C_SOURCE']
+endif
 add_project_arguments(cc_args, language: 'c')
 
 compiler_flags = [
@@ -33,6 +37,11 @@ compiler_flags = [
 ]
 
 cc = meson.get_compiler('c')
+config_h.set('HAVE_STRUCT_ITIMERSPEC', cc.has_type(
+	'struct itimerspec',
+	prefix: '#include <time.h>',
+	args: cc_args,
+))
 add_project_arguments(
 	cc.get_supported_arguments(compiler_flags),
 	language: 'c'
@@ -73,17 +82,23 @@ if host_machine.system() == 'freebsd'
 ''', name : 'MSG_CMSG_CLOEXEC works correctly')
 endif
 config_h.set10('HAVE_BROKEN_MSG_CMSG_CLOEXEC', have_broken_msg_cmsg_cloexec)
+config_h.set10('HAVE_BROKEN_MSG_DONTWAIT', host_machine.system() == 'darwin')
 
 if get_option('libraries')
-	if host_machine.system() in ['freebsd', 'openbsd']
-		# When building for FreeBSD, epoll(7) is provided by a userspace
+	if host_machine.system() in ['freebsd', 'openbsd', 'darwin']
+		# When building for BSDs, epoll(7) is provided by a userspace
 		# wrapper around kqueue(2).
 		epoll_dep = dependency('epoll-shim')
 	else
 		# Otherwise, assume that epoll(7) is supported natively.
 		epoll_dep = []
 	endif
-	ffi_dep = dependency('libffi')
+
+	if host_machine.system() == 'darwin'
+		ffi_dep = cc.find_library('ffi')
+	else
+		ffi_dep = dependency('libffi')
+	endif
 
 	decls = [
 		{ 'header': 'sys/signalfd.h', 'symbol': 'SFD_CLOEXEC' },
