@@ -3161,6 +3161,10 @@
     <request name="add">
       <description summary="add rectangle to region">
         Add the specified rectangle to the region.
+
+        Adding a rectangle with a non-positive size, i.e. width or height
+        are less than or equal to zero, is effectively a NOP and does not modify
+        the area described by the region.
       </description>
       <arg name="x" type="int" summary="region-local x coordinate"/>
       <arg name="y" type="int" summary="region-local y coordinate"/>
@@ -3171,6 +3175,10 @@
     <request name="subtract">
       <description summary="subtract rectangle from region">
         Subtract the specified rectangle from the region.
+
+        Subtracting a rectangle with a non-positive size, i.e. width or height
+        are less than or equal to zero, is effectively a NOP and does not modify
+        the area described by the region.
       </description>
       <arg name="x" type="int" summary="region-local x coordinate"/>
       <arg name="y" type="int" summary="region-local y coordinate"/>
